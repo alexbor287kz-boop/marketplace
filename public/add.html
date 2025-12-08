@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>Добавить продукт</title>
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    background-color: #f0f2f5;
+    margin: 0;
+    padding: 20px;
+  }
+
+  h1 {
+    text-align: center;
+    color: #333;
+  }
+
+  form {
+    max-width: 500px;
+    margin: 0 auto;
+    background-color: #fff;
+    padding: 30px;
+    border-radius: 10px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+  }
+
+  label {
+    font-weight: bold;
+    margin-top: 15px;
+    display: block;
+    color: #555;
+  }
+
+  input, select, textarea {
+    width: 100%;
+    padding: 10px;
+    margin-top: 5px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    box-sizing: border-box;
+    font-size: 14px;
+  }
+
+  button {
+    width: 100%;
+    padding: 12px;
+    margin-top: 20px;
+    border: none;
+    border-radius: 6px;
+    background-color: #2196F3;
+    color: white;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+  }
+
+  button:hover {
+    background-color: #1976d2;
+  }
+</style>
+</head>
+<body>
+<h1>Добавить продукт</h1>
+<form id="addForm">
+
+  <!-- убрали username -->
+  <label>Название</label>
+  <input type="text" name="title" required>
+
+  <label>Краткое описание</label>
+  <textarea name="short_description"></textarea>
+
+  <label>Логотип URL</label>
+  <input type="text" name="icon_url">
+
+  <label>Категория</label>
+  <select name="category" required>
+    <option value="">-- выберите --</option>
+    <option value="учебные">учебные</option>
+    <option value="научные">научные</option>
+    <option value="боты">боты</option>
+    <option value="мероприятия">мероприятия</option>
+  </select>
+
+  <label>Тип продукта</label>
+  <select name="product_type" required>
+    <option value="">-- выберите --</option>
+    <option value="веб">веб</option>
+    <option value="мобильное">мобильное</option>
+    <option value="бот">бот</option>
+    <option value="плагин">плагин</option>
+  </select>
+
+  <label>Теги (через запятую)</label>
+  <input type="text" name="tags">
+
+  <label>Ссылка на продукт</label>
+  <input type="text" name="product_url">
+
+  <button type="submit">Добавить</button>
+</form>
+
+<script>
+const form = document.getElementById("addForm");
+form.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const formData = new FormData(form);
+  const data = Object.fromEntries(formData.entries());
+
+  // берём токен из localStorage
+  const token = localStorage.getItem("token");
+  if(!token){
+    alert("Сначала войдите!");
+    window.location.href = "login.html";
+    return;
+  }
+
+  const response = await fetch("/api/products", {
+    method: "POST",
+    headers: { 
+      "Content-Type": "application/json",
+      "Authorization": "Bearer " + token
+    },
+    body: JSON.stringify(data)
+  });
+
+  const result = await response.json();
+  if(response.ok){
+    alert("Продукт добавлен!");
+    form.reset();
+  } else {
+    alert("Не удалось добавить продукт. Проверьте корректность данных.");
+    console.error(result);
+  }
+});
+</script>
+</body>
+</html>

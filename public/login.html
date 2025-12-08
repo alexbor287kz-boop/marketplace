@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>Вход</title>
+<style>
+  body { font-family: sans-serif; padding: 20px; display:flex; justify-content:center; }
+  form { width: 300px; background:#f9f9f9; padding:20px; border-radius:8px; }
+  input, button { width: 100%; margin: 8px 0; padding:8px; font-size:14px; }
+  button { cursor:pointer; background:#2196F3; color:#fff; border:none; border-radius:5px; }
+  button:hover { background:#1976d2; }
+</style>
+</head>
+<body>
+<form id="loginForm">
+  <h2>Вход</h2>
+  <input type="email" name="email" placeholder="Email" required>
+  <input type="password" name="password" placeholder="Пароль" required>
+  <button type="submit">Войти</button>
+</form>
+
+<script>
+const form = document.getElementById('loginForm');
+form.addEventListener('submit', async e => {
+  e.preventDefault();
+  const data = Object.fromEntries(new FormData(form).entries());
+
+  const res = await fetch('/api/login', {
+    method: 'POST',
+    headers: { 'Content-Type':'application/json' },
+    body: JSON.stringify(data)
+  });
+
+  const result = await res.json();
+  if(res.ok){
+    localStorage.setItem('token', result.token);
+    alert('Вход успешен!');
+    window.location.href = 'index.html';
+  } else {
+    alert(result.error || 'Ошибка входа');
+  }
+});
+</script>
+</body>
+</html>

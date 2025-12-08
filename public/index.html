@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Marketplace студентов</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f0f2f5;
+      padding: 20px;
+    }
+
+    h1 {
+      text-align: center;
+      color: #333;
+    }
+
+    a {
+      display: inline-block;
+      margin-bottom: 20px;
+      padding: 10px 20px;
+      background-color: #185b92;
+      color: #fff;
+      text-decoration: none;
+      border-radius: 6px;
+      transition: background-color 0.3s;
+    }
+
+    a:hover {
+      background-color: #2a6aaa;
+    }
+
+    .card {
+      background-color: #fff;
+      border-radius: 10px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+
+    .card h3 {
+      margin-top: 0;
+      color: #165c96;
+    }
+
+    .card p {
+      margin: 5px 0;
+      color: #555;
+    }
+
+    .card button {
+      margin-right: 10px;
+      padding: 8px 16px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: background-color 0.3s;
+    }
+
+    .edit-btn {
+      background-color: #336b34;
+      color: #fff;
+    }
+
+    .edit-btn:hover {
+      background-color: #388E3C;
+    }
+
+    .delete-btn {
+      background-color: #752e29;
+      color: #fff;
+    }
+
+    .delete-btn:hover {
+      background-color: #D32F2F;
+    }
+  </style>
+</head>
+<body>
+  <h1>Marketplace студентов</h1>
+
+  <!-- Кнопка добавления — только если есть токен -->
+  <a id="addBtn" href="add.html" style="display:none;">Добавить продукт</a>
+
+  <div id="products"></div>
+
+  <script>
+    // ========== Проверка токена ==========
+    const token = localStorage.getItem("token");
+
+    if (!token) {
+      // Если нет токена → отправляем на login.html
+      window.location.href = "login.html";
+    } else {
+      // Показываем кнопку "Добавить продукт"
+      document.getElementById("addBtn").style.display = "inline-block";
+    }
+
+    // ========== Загрузка продуктов ==========
+    async function loadProducts() {
+      const res = await fetch("/api/products", {
+        headers: {
+          "Authorization": "Bearer " + token
+        }
+      });
+
+      const products = await res.json();
+
+      const container = document.getElementById("products");
+      container.innerHTML = products.map(p => `
+        <div class="card">
+          <h3>${p.title}</h3>
+          <p><strong>Владелец:</strong> ${p.owner_name || 'Неизвестен'}</p>
+          <p>${p.short_description}</p>
+          <p><strong>Категория:</strong> ${p.category}, <strong>Тип:</strong> ${p.product_type}</p>
+          <p><strong>Теги:</strong> ${Array.isArray(p.tags) ? p.tags.join(', ') : p.tags}</p>
+          <p><a href="${p.product_url}" target="_blank">Ссылка</a></p>
+          <button class="edit-btn" onclick="edit('${p.id}')">Редактировать</button>
+          <button class="delete-btn" onclick="del('${p.id}')">Удалить</button>
+        </div>
+      `).join("");
+    }
+
+    async function del(id) {
+      if(confirm("Вы уверены, что хотите удалить продукт?")) {
+        await fetch("/api/products/" + id, {
+          method: "DELETE",
+          headers: { "Authorization": "Bearer " + token }
+        });
+        loadProducts();
+      }
+    }
+
+    function edit(id) {
+      window.location.href = "edit.html?id=" + id;
+    }
+
+    loadProducts();
+  </script>
+</body>
+</html>

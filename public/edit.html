@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Редактировать продукт</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f0f2f5;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      padding-top: 50px;
+    }
+
+    form {
+      background-color: #fff;
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+      width: 400px;
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 20px;
+      color: #333;
+    }
+
+    input, select, textarea {
+      width: 100%;
+      padding: 10px;
+      margin: 8px 0;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      font-size: 14px;
+      box-sizing: border-box;
+    }
+
+    input[readonly] {
+      background-color: #e9ecef;
+      cursor: not-allowed;
+    }
+
+    button {
+      width: 100%;
+      padding: 12px;
+      margin-top: 15px;
+      border: none;
+      border-radius: 6px;
+      background-color: #2196F3;
+      color: white;
+      font-size: 16px;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+
+    button:hover {
+      background-color: #1976d2;
+    }
+
+    label {
+      font-weight: bold;
+      margin-top: 10px;
+      display: block;
+      color: #555;
+    }
+  </style>
+</head>
+<body>
+  <form id="form">
+    <h1>Редактировать продукт</h1>
+
+    <label>Владелец</label>
+    <input type="text" name="owner_name" readonly>
+
+    <label>Название</label>
+    <input name="title" required>
+
+    <label>Краткое описание</label>
+    <textarea name="short_description"></textarea>
+
+    <label>Логотип (URL)</label>
+    <input name="icon_url">
+
+    <label>Категория</label>
+    <select name="category" required>
+      <option value="учебные">Учебные</option>
+      <option value="научные">Научные</option>
+      <option value="боты">Боты</option>
+      <option value="мероприятия">Мероприятия</option>
+    </select>
+
+    <label>Тип продукта</label>
+    <select name="product_type" required>
+      <option value="веб">Веб</option>
+      <option value="мобильное">Мобильное</option>
+      <option value="бот">Бот</option>
+      <option value="плагин">Плагин</option>
+    </select>
+
+    <label>Теги (через запятую)</label>
+    <input name="tags">
+
+    <label>Ссылка на продукт</label>
+    <input name="product_url">
+
+    <button type="submit">Сохранить</button>
+  </form>
+
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const id = params.get("id");
+    const form = document.getElementById("form");
+
+    async function loadProduct() {
+      const res = await fetch("/api/products");
+      const products = await res.json();
+      const product = products.find(p => p.id === id);
+
+      if(product){
+        form.title.value = product.title;
+        form.short_description.value = product.short_description;
+        form.icon_url.value = product.icon_url;
+        form.category.value = product.category;
+        form.product_type.value = product.product_type;
+        form.tags.value = Array.isArray(product.tags) ? product.tags.join(", ") : product.tags;
+        form.product_url.value = product.product_url;
+
+        // выводим имя владельца
+        form.owner_name.value = product.owner_name || "Неизвестен";
+      }
+    }
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const data = Object.fromEntries(new FormData(form).entries());
+      delete data.owner_name; // не отправляем имя владельца в апдейт
+      await fetch("/api/products/" + id, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data)
+      });
+      window.location.href = "/";
+    });
+
+    loadProduct();
+  </script>
+</body>
+</html>
