@@ -108,43 +108,62 @@
     <button type="submit">Сохранить</button>
   </form>
 
-  <script>
-    const params = new URLSearchParams(window.location.search);
-    const id = params.get("id");
-    const form = document.getElementById("form");
+ <script>
+const params = new URLSearchParams(window.location.search);
+const id = params.get("id");
+const form = document.getElementById("form");
+const token = localStorage.getItem("token"); // получаем токен
 
-    async function loadProduct() {
-      const res = await fetch("/api/products");
-      const products = await res.json();
-      const product = products.find(p => p.id === id);
+async function loadProduct() {
+  const res = await fetch("/api/products", {
+    headers: { "Authorization": "Bearer " + token } // передаём токен
+  });
+  const products = await res.json();
+  const product = products.find(p => p.id === id);
 
-      if(product){
-        form.title.value = product.title;
-        form.short_description.value = product.short_description;
-        form.icon_url.value = product.icon_url;
-        form.category.value = product.category;
-        form.product_type.value = product.product_type;
-        form.tags.value = Array.isArray(product.tags) ? product.tags.join(", ") : product.tags;
-        form.product_url.value = product.product_url;
+  if (product) {
+    form.title.value = product.title || "";
+    form.short_description.value = product.short_description || "";
+    form.icon_url.value = product.icon_url || "";
+    form.category.value = product.category || "учебные";
+    form.product_type.value = product.product_type || "веб";
+    form.tags.value = Array.isArray(product.tags) ? product.tags.join(", ") : (product.tags || "");
+    form.product_url.value = product.product_url || "";
 
-        // выводим имя владельца
-        form.owner_name.value = product.owner_name || "Неизвестен";
-      }
-    }
+    // выводим имя владельца
+    form.owner_name.value = product.owner_name || "Неизвестен";
+  }
+}
 
-    form.addEventListener("submit", async (e) => {
-      e.preventDefault();
-      const data = Object.fromEntries(new FormData(form).entries());
-      delete data.owner_name; // не отправляем имя владельца в апдейт
-      await fetch("/api/products/" + id, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data)
-      });
-      window.location.href = "/";
-    });
+form.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const data = Object.fromEntries(new FormData(form).entries());
+  delete data.owner_name; // не отправляем имя владельца в апдейт
 
-    loadProduct();
-  </script>
+  console.log("PUT data:", data);
+
+  const res = await fetch("/api/products/" + id, {
+    method: "PUT",
+    headers: { 
+      "Content-Type": "application/json",
+      "Authorization": "Bearer " + token // обязательно
+    },
+    body: JSON.stringify(data)
+  });
+
+  const result = await res.json();
+  console.log("PUT result:", result);
+
+  if(res.ok){
+    window.location.href = "/";
+  } else {
+    alert(result.error || "Ошибка при обновлении продукта");
+  }
+});
+
+loadProduct();
+</script>
+
+
 </body>
 </html>

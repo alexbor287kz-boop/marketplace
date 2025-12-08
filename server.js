@@ -83,35 +83,12 @@ app.post("/api/products", authMiddleware, async (req, res) => {
 
 
 
-// ---------------- Редактировать продукт ----------------
-app.put("/api/products/:id", authMiddleware, async (req, res) => {
+// Редактировать продукт
+app.put("/api/products/:id", async (req, res) => {
   try {
-    const productId = req.params.id;
-    console.log("Editing product id:", productId, "user:", req.user.id);
-
-    // Собираем только изменяемые поля
-    const { title, short_description, icon_url, category, product_type, tags, product_url } = req.body;
-    const updateData = {
-      ...(title && { title }),
-      ...(short_description && { short_description }),
-      ...(icon_url && { icon_url }),
-      ...(category && { category }),
-      ...(product_type && { product_type }),
-      ...(tags && { tags: tags.split(",").map(t => t.trim()) }),
-      ...(product_url && { product_url }),
-      updated_at: new Date().toISOString()
-    };
-
-    const { data, error } = await supabase
-      .from("products")
-      .update(updateData)
-      .eq("id", productId) // по UUID
-      //.eq("owner_id", req.user.id) // если хочешь проверку владельца, раскомментируй
-      .select();
-
+    const updateData = { ...req.body, updated_at: new Date().toISOString() };
+    const { data, error } = await supabase.from("products").update(updateData).eq("id", req.params.id).select();
     if (error) return res.status(500).json({ error: error.message });
-    if (!data || data.length === 0) return res.status(404).json({ error: "Product not found or not yours" });
-
     res.json(data[0]);
   } catch (err) {
     console.error(err);
@@ -119,31 +96,17 @@ app.put("/api/products/:id", authMiddleware, async (req, res) => {
   }
 });
 
-// ---------------- Удалить продукт ----------------
-app.delete("/api/products/:id", authMiddleware, async (req, res) => {
+// Удалить продукт
+app.delete("/api/products/:id", async (req, res) => {
   try {
-    const productId = req.params.id;
-    console.log("Deleting product id:", productId, "user:", req.user.id);
-
-    const { data, error } = await supabase
-      .from("products")
-      .delete()
-      .eq("id", productId)
-      //.eq("owner_id", req.user.id) // если нужно удалять только свои
-      .select();
-
+    const { data, error } = await supabase.from("products").delete().eq("id", req.params.id);
     if (error) return res.status(500).json({ error: error.message });
-    if (!data || data.length === 0) return res.status(404).json({ error: "Product not found or not yours" });
-
     res.json({ message: "Deleted" });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Server error" });
   }
 });
-
-
-
 
 
 
