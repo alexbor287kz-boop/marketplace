@@ -115,7 +115,7 @@ form.addEventListener("submit", async (e) => {
     window.location.href = "login.html";
     return;
   }
-
+  console.log("TOKEN:", token);
   const response = await fetch("/api/products", {
     method: "POST",
     headers: { 

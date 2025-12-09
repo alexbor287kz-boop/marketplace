@@ -23,6 +23,21 @@ const supabase = createClient(supabaseUrl, supabaseKey);
 
 const PORT = process.env.PORT || 3000;
 
+
+// Middleware для проверки токена
+function authMiddleware(req, res, next) {
+  const header = req.headers.authorization;
+  if (!header) return res.status(401).json({ error: "Нет токена" });
+
+  const token = header.split(" ")[1];
+  try {
+    req.user = jwt.verify(token, JWT_SECRET);
+    next();
+  } catch {
+    return res.status(401).json({ error: "Неверный токен" });
+  }
+}
+
 // ---------------- CRUD Products ----------------
 
 // Получить все продукты с именем владельца
@@ -173,21 +188,6 @@ app.post("/api/login", async (req, res) => {
     res.status(500).json({ error: "Server error" });
   }
 });
-
-
-// Middleware для проверки токена
-function authMiddleware(req, res, next) {
-  const header = req.headers.authorization;
-  if (!header) return res.status(401).json({ error: "Нет токена" });
-
-  const token = header.split(" ")[1];
-  try {
-    req.user = jwt.verify(token, JWT_SECRET);
-    next();
-  } catch {
-    return res.status(401).json({ error: "Неверный токен" });
-  }
-}
 
 
 

@@ -18,7 +18,7 @@ module.exports = async (req, res) => {
     const valid = await bcrypt.compare(password, user.password_hash);
     if (!valid) return res.status(400).json({ error: "Неверный пароль" });
 
-    const token = jwt.sign({ id: user.id, full_name: user.full_name }, JWT_SECRET, { expiresIn: "2h" });
+    const token = jwt.sign({ id: user.id, full_name: user.full_name }, JWT_SECRET, { expiresIn: "7d" });
     res.json({ token, full_name: user.full_name });
   } catch (err) {
     res.status(500).json({ error: "Server error" });
