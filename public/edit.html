@@ -65,6 +65,16 @@
       display: block;
       color: #555;
     }
+
+    .media-list {
+      margin-top: 10px;
+    }
+
+    .media-list img, .media-list video {
+      max-width: 100%;
+      margin-top: 5px;
+      border-radius: 6px;
+    }
   </style>
 </head>
 <body>
@@ -105,21 +115,27 @@
     <label>Ссылка на продукт</label>
     <input name="product_url">
 
+    <label>Добавить медиа (фото/видео)</label>
+    <input type="file" name="file" id="fileInput">
+
+    <div class="media-list" id="mediaList"></div>
+
     <button type="submit">Сохранить</button>
   </form>
 
- <script>
+  <script>
 const params = new URLSearchParams(window.location.search);
 const id = params.get("id");
 const form = document.getElementById("form");
-const token = localStorage.getItem("token"); // получаем токен
+const token = localStorage.getItem("token");
+const fileInput = document.getElementById("fileInput");
+const mediaList = document.getElementById("mediaList");
 
 async function loadProduct() {
-  const res = await fetch("/api/products", {
-    headers: { "Authorization": "Bearer " + token } // передаём токен
+  const res = await fetch("/api/products/" + id, {
+    headers: { "Authorization": "Bearer " + token }
   });
-  const products = await res.json();
-  const product = products.find(p => p.id === id);
+  const product = await res.json();
 
   if (product) {
     form.title.value = product.title || "";
@@ -129,41 +145,78 @@ async function loadProduct() {
     form.product_type.value = product.product_type || "веб";
     form.tags.value = Array.isArray(product.tags) ? product.tags.join(", ") : (product.tags || "");
     form.product_url.value = product.product_url || "";
-
-    // выводим имя владельца
     form.owner_name.value = product.owner_name || "Неизвестен";
+
+    // выводим медиа
+    if (product.media && product.media.length) {
+      mediaList.innerHTML = product.media.map(m => {
+        if (m.type.startsWith("video")) {
+          return `<video controls src="${m.url}"></video>`;
+        } else {
+          return `<img src="${m.url}" alt="media">`;
+        }
+      }).join("");
+    }
   }
+}
+
+async function uploadFile(file) {
+  const formData = new FormData();
+  formData.append("file", file);
+
+  const res = await fetch("/api/upload", {
+    method: "POST",
+    headers: { "Authorization": "Bearer " + token },
+    body: formData
+  });
+
+  if (!res.ok) {
+    const err = await res.json();
+    throw new Error(err.error || "Ошибка загрузки файла");
+  }
+  return await res.json(); // вернёт { url }
 }
 
 form.addEventListener("submit", async (e) => {
   e.preventDefault();
   const data = Object.fromEntries(new FormData(form).entries());
-  delete data.owner_name; // не отправляем имя владельца в апдейт
+  delete data.owner_name;
 
-  console.log("PUT data:", data);
+  try {
+    // если есть файл для загрузки
+    if (fileInput.files.length > 0) {
+      const file = fileInput.files[0];
+      const uploadRes = await uploadFile(file);
+      // добавляем URL файла в media
+      data.media = [{ type: file.type, url: uploadRes.url }];
+    }
 
-  const res = await fetch("/api/products/" + id, {
-    method: "PUT",
-    headers: { 
-      "Content-Type": "application/json",
-      "Authorization": "Bearer " + token // обязательно
-    },
-    body: JSON.stringify(data)
-  });
+    const res = await fetch("/api/products/" + id, {
+      method: "PUT",
+      headers: { 
+        "Content-Type": "application/json",
+        "Authorization": "Bearer " + token
+      },
+      body: JSON.stringify(data)
+    });
 
-  const result = await res.json();
-  console.log("PUT result:", result);
+    const result = await res.json();
 
-  if(res.ok){
-    window.location.href = "/";
-  } else {
-    alert(result.error || "Ошибка при обновлении продукта");
+    if (res.ok) {
+      alert("Продукт обновлён!");
+      window.location.href = "index.html";
+    } else {
+      alert(result.error || "Ошибка при обновлении продукта");
+    }
+
+  } catch (err) {
+    console.error("Upload error:", err);
+    alert(err.message);
   }
+
 });
 
 loadProduct();
-</script>
-
-
+  </script>
 </body>
 </html>

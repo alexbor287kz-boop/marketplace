@@ -17,6 +17,11 @@
   <input type="email" name="email" placeholder="Email" required>
   <input type="password" name="password" placeholder="Пароль" required>
   <button type="submit">Войти</button>
+  <!-- Кнопка для перехода на регистрацию -->
+  <p style="text-align:center; margin-top:10px;">
+    Нет аккаунта? 
+    <a href="register.html" style="color:#2196F3; text-decoration:none;">Зарегистрироваться</a>
+  </p>
 </form>
 
 <script>
@@ -34,6 +39,8 @@ form.addEventListener('submit', async e => {
   const result = await res.json();
   if(res.ok){
     localStorage.setItem('token', result.token);
+    localStorage.setItem('full_name', result.full_name);
+    localStorage.setItem('email', data.email); // <-- добавляем почту
     alert('Вход успешен!');
     window.location.href = 'index.html';
   } else {

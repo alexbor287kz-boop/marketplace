@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<title>Добавить продукт</title>
+<title>Добавить проект</title>
 <style>
   body {
     font-family: Arial, sans-serif;
@@ -61,7 +61,7 @@
 </style>
 </head>
 <body>
-<h1>Добавить продукт</h1>
+<h1>Добавить проект</h1>
 <form id="addForm">
 
   <!-- убрали username -->
@@ -98,42 +98,80 @@
   <label>Ссылка на продукт</label>
   <input type="text" name="product_url">
 
+  <label>Фото/Видео</label>
+  <input type="file" name="media" multiple>
+
   <button type="submit">Добавить</button>
 </form>
 
 <script>
 const form = document.getElementById("addForm");
+// используем существующий input из формы
+const mediaInput = form.querySelector('input[name="media"]');
+
 form.addEventListener("submit", async (e) => {
   e.preventDefault();
-  const formData = new FormData(form);
-  const data = Object.fromEntries(formData.entries());
 
-  // берём токен из localStorage
   const token = localStorage.getItem("token");
-  if(!token){
+  if (!token) {
     alert("Сначала войдите!");
     window.location.href = "login.html";
     return;
   }
-  console.log("TOKEN:", token);
+
+  // 1️⃣ Собираем данные формы
+  const formData = new FormData(form);
+  const data = Object.fromEntries(formData.entries());
+
+  // 2️⃣ Загружаем медиа на сервер
+  const files = mediaInput.files;
+  const media = [];
+
+  for (let file of files) {
+    console.log(file.name, file.size, file.type);
+    const fd = new FormData();
+    fd.append("file", file);
+
+    // Отправляем файл на серверный endpoint /api/upload
+    const uploadRes = await fetch("/api/upload", {
+      method: "POST",
+      headers: { "Authorization": "Bearer " + token },
+      body: fd
+    });
+
+    if (!uploadRes.ok) {
+      alert("Ошибка загрузки файла: " + file.name);
+      return;
+    }
+
+    const resJson = await uploadRes.json();
+    media.push({
+      type: file.type.startsWith("image") ? "image" : "video",
+      url: resJson.url
+    });
+  }
+
+  // 3️⃣ Отправляем продукт с media на сервер
   const response = await fetch("/api/products", {
     method: "POST",
     headers: { 
       "Content-Type": "application/json",
       "Authorization": "Bearer " + token
     },
-    body: JSON.stringify(data)
+    body: JSON.stringify({ ...data, media })
   });
 
   const result = await response.json();
-  if(response.ok){
+  if (response.ok) {
     alert("Продукт добавлен!");
-    form.reset();
+    window.location.href = "index.html";
   } else {
     alert("Не удалось добавить продукт. Проверьте корректность данных.");
     console.error(result);
   }
 });
 </script>
+
+
 </body>
 </html>

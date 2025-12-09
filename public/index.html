@@ -13,9 +13,11 @@
     h1 {
       text-align: center;
       color: #333;
+      margin-bottom: 30px;
     }
 
-    a {
+    /* Add button */
+    #addBtn {
       display: inline-block;
       margin-bottom: 20px;
       padding: 10px 20px;
@@ -25,116 +27,163 @@
       border-radius: 6px;
       transition: background-color 0.3s;
     }
+    #addBtn:hover { background-color: #2a6aaa; }
 
-    a:hover {
-      background-color: #2a6aaa;
+    /* Profile circle */
+    #userInfo {
+      position: fixed;
+      top: 10px;
+      right: 10px;
+      text-align: center;
+      cursor: pointer;
+    }
+    #userCircle {
+      width: 40px;
+      height: 40px;
+      background-color: #2196F3;
+      border-radius: 50%;
+      display: inline-block;
+    }
+    #userName {
+      margin-top: 4px;
+      font-weight: bold;
+      color: #333;
+    }
+    #userEmail {
+      display: none;
+      font-size: 12px;
+      color: #555;
+      margin-top: 2px;
+      transition: all 0.3s;
+    }
+    #logoutBtn {
+      display: block;
+      margin-top: 4px;
+      padding: 2px 6px;
+      font-size: 12px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      background-color: #f44336;
+      color: #fff;
+    }
+    #logoutBtn:hover { background-color: #d32f2f; }
+
+    /* Cards grid */
+    .cards-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+      justify-content: center;
     }
 
     .card {
       background-color: #fff;
-      border-radius: 10px;
+      border-radius: 12px;
       box-shadow: 0 4px 10px rgba(0,0,0,0.1);
       padding: 20px;
-      margin-bottom: 20px;
+      width: 300px;
+      display: flex;
+      flex-direction: column;
+      transition: transform 0.2s, box-shadow 0.2s;
     }
+    .card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 6px 15px rgba(0,0,0,0.15);
+    }
+    .card img {
+      width: 100%;
+      height: 150px;
+      object-fit: cover;
+      border-radius: 8px;
+      margin-bottom: 12px;
+      background-color: #ddd;
+    }
+    .card h3 { margin: 0 0 8px 0; color: #165c96; font-size: 18px; }
+    .card p { margin: 4px 0; color: #555; font-size: 14px; }
+    .tags { display: flex; flex-wrap: wrap; gap: 6px; margin: 6px 0; }
+    .tag { background-color: #e0e0e0; color: #333; font-size: 12px; padding: 3px 8px; border-radius: 12px; }
+    .card-buttons { margin-top: auto; display: flex; gap: 10px; flex-wrap: wrap; }
+    .card button { flex: 1; padding: 8px; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; color: #fff; transition: background-color 0.3s; }
+    .edit-btn { background-color: #336b34; }
+    .edit-btn:hover { background-color: #388E3C; }
+    .delete-btn { background-color: #752e29; }
+    .delete-btn:hover { background-color: #D32F2F; }
+    .details-btn { background-color: #1976d2; }
+    .details-btn:hover { background-color: #1565c0; }
 
-    .card h3 {
-      margin-top: 0;
-      color: #165c96;
-    }
-
-    .card p {
-      margin: 5px 0;
-      color: #555;
-    }
-
-    .card button {
-      margin-right: 10px;
-      padding: 8px 16px;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
-      font-size: 14px;
-      transition: background-color 0.3s;
-    }
-
-    .edit-btn {
-      background-color: #336b34;
-      color: #fff;
-    }
-
-    .edit-btn:hover {
-      background-color: #388E3C;
-    }
-
-    .delete-btn {
-      background-color: #752e29;
-      color: #fff;
-    }
-
-    .delete-btn:hover {
-      background-color: #D32F2F;
-    }
   </style>
 </head>
 <body>
+  <!-- User Info -->
+  <div id="userInfo">
+    <div id="userCircle"></div>
+    <div id="userName"></div>
+    <div id="userEmail"></div>
+    <button id="logoutBtn">Выйти</button>
+  </div>
+
   <h1>Marketplace студентов</h1>
-
-  <!-- Кнопка добавления — только если есть токен -->
-  <a id="addBtn" href="add.html" style="display:none;">Добавить продукт</a>
-
-  <div id="products"></div>
+  <a id="addBtn" href="add.html" style="display:none;">Добавить проект</a>
+  <div class="cards-container" id="products"></div>
 
   <script>
-    // ========== Проверка токена ==========
     const token = localStorage.getItem("token");
+    const name = localStorage.getItem("full_name") || "Пользователь";
+    const email = localStorage.getItem("email") || "Скрыто";
 
-    if (!token) {
-      // Если нет токена → отправляем на login.html
+    if (!token) window.location.href = "login.html";
+    else document.getElementById("addBtn").style.display = "inline-block";
+
+    // Profile info
+    document.getElementById("userName").textContent = name;
+    document.getElementById("userEmail").textContent = email;
+
+    const userInfoDiv = document.getElementById("userInfo");
+    userInfoDiv.addEventListener("mouseenter", () => {
+      document.getElementById("userEmail").style.display = "block";
+    });
+    userInfoDiv.addEventListener("mouseleave", () => {
+      document.getElementById("userEmail").style.display = "none";
+    });
+
+    document.getElementById("logoutBtn").addEventListener("click", () => {
+      localStorage.clear();
       window.location.href = "login.html";
-    } else {
-      // Показываем кнопку "Добавить продукт"
-      document.getElementById("addBtn").style.display = "inline-block";
-    }
+    });
 
-    // ========== Загрузка продуктов ==========
+    // Load products
     async function loadProducts() {
-      const res = await fetch("/api/products", {
-        headers: {
-          "Authorization": "Bearer " + token
-        }
-      });
-
+      const res = await fetch("/api/products", { headers: { "Authorization": "Bearer " + token } });
       const products = await res.json();
-
       const container = document.getElementById("products");
       container.innerHTML = products.map(p => `
         <div class="card">
+          <img src="${p.icon_url || 'https://via.placeholder.com/300x150?text=No+Image'}" alt="Project Image">
           <h3>${p.title}</h3>
           <p><strong>Владелец:</strong> ${p.owner_name || 'Неизвестен'}</p>
           <p>${p.short_description}</p>
           <p><strong>Категория:</strong> ${p.category}, <strong>Тип:</strong> ${p.product_type}</p>
-          <p><strong>Теги:</strong> ${Array.isArray(p.tags) ? p.tags.join(', ') : p.tags}</p>
-          <p><a href="${p.product_url}" target="_blank">Ссылка</a></p>
-          <button class="edit-btn" onclick="edit('${p.id}')">Редактировать</button>
-          <button class="delete-btn" onclick="del('${p.id}')">Удалить</button>
+          <div class="tags">
+            ${(Array.isArray(p.tags) ? p.tags : []).map(t => `<div class="tag">${t}</div>`).join('')}
+          </div>
+          <div class="card-buttons">
+            <button class="details-btn" onclick="viewDetails('${p.id}')">Подробнее</button>
+            <button class="edit-btn" onclick="edit('${p.id}')">Редактировать</button>
+            <button class="delete-btn" onclick="del('${p.id}')">Удалить</button>
+          </div>
         </div>
-      `).join("");
+      `).join('');
     }
 
     async function del(id) {
       if(confirm("Вы уверены, что хотите удалить продукт?")) {
-        await fetch("/api/products/" + id, {
-          method: "DELETE",
-          headers: { "Authorization": "Bearer " + token }
-        });
+        await fetch("/api/products/" + id, { method: "DELETE", headers: { "Authorization": "Bearer " + token } });
         loadProducts();
       }
     }
-
-    function edit(id) {
-      window.location.href = "edit.html?id=" + id;
-    }
+    function edit(id) { window.location.href = "edit.html?id=" + id; }
+    function viewDetails(id) { window.location.href = "project.html?id=" + id; }
 
     loadProducts();
   </script>
